@@ -28,6 +28,7 @@ function! angular_cli#CreateEditCommands() abort
   for mode in modes
     let elements_with_relation = 
           \[ ['Component', 'component.ts'],
+          \  ['Page', 'page.ts'],
           \  ['Module', 'module.ts'],
           \  ['Template', 'component.html'],
           \  ['Spec', 'component.spec.ts'],
@@ -83,11 +84,15 @@ function! angular_cli#CreateDefaultStyleExt() abort
 endfunction
 
 function! angular_cli#CreateDestroyCommand() abort
-  silent execute command! -nargs=1 -complete=customlist,angular_cli#NgFiles call angular_cli#DestroyElement(<f-args>)
+  silent execute 'command! -nargs=1 -complete=customlist,angular_cli#NgFiles call angular_cli#DestroyElement(<f-args>)'
 endfunction
 
 function! angular_cli#ComponentFiles(A,L,P) abort
   return angular_cli#Files('component.ts', a:A)
+endfunction
+
+function! angular_cli#PageFiles(A,L,P) abort
+  return angular_cli#Files('page.ts', a:A)
 endfunction
 
 function! angular_cli#ModuleFiles(A,L,P) abort
@@ -188,13 +193,16 @@ endfunction
 
 function! angular_cli#EditRelatedFile(file, command, target_extension) abort
   let file = a:file
-  if file == ''
-    let source_extension = angular_cli#GetSourceNgExtension()
-    let file = substitute(expand('%'), source_extension,  '.' . a:target_extension, '')
-    call angular_cli#EditFileIfExist(file, a:command, a:target_extension)
-  else 
-    call angular_cli#EditFileIfExist(a:file, a:command, a:target_extension)
+  let target_extension = a:target_extension
+  let source_extension = angular_cli#GetSourceNgExtension()
+  " component to page
+  if source_extension =~ 'page\.\w\+$' && target_extension =~ 'component\.\w\+$'
+    let target_extension = substitute(target_extension, 'component\(\.\w\+\)$',  'page\1', '')
   endif
+  if file == ''
+    let file = substitute(expand('%'), source_extension,  '.' . target_extension, '')
+  endif
+  call angular_cli#EditFileIfExist(file, a:command, target_extension)
 endfunction
 
 function! angular_cli#GetSourceNgExtension() abort
@@ -203,7 +211,11 @@ function! angular_cli#GetSourceNgExtension() abort
         \  'module.ts',
         \  'component.html',
         \  'component.' . g:angular_cli_stylesheet_format,
-        \  'component.spec.ts']
+        \  'component.spec.ts',
+        \  'page.ts',
+        \  'page.html',
+        \  'page.' . g:angular_cli_stylesheet_format,
+        \  'page.spec.ts']
   for extension in extensions
     if expand('%e') =~ extension
       return '.' . extension

@@ -38,6 +38,7 @@ Ng test
 ## The E Command (Edit)
 The E command allows to open up an Angular file. The list of compatible file types are the following:
 - Component *
+- Page *
 - Module *
 - Template (HTML files) *
 - Directive
